@@ -1,0 +1,30 @@
+# .github/workflows/deploy-build-to-backend.yml
+name: Deploy Build to Backend
+
+on:
+  push:
+    paths:
+      - 'build/**'  # Solo se ejecutará si hay cambios dentro de la carpeta build
+    branches:
+      - main  # O la rama principal que estés usando
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout del repositorio frontend
+        uses: actions/checkout@v3
+
+      - name: Verificar si hay cambios en la carpeta build
+        run: |
+          git diff --exit-code build || echo "Changes detected in build folder"
+
+      - name: Copiar build al repositorio backend
+        uses: appleboy/ssh-action@v0.1.7  # Puedes usar este action para subir archivos a otro repo a través de SSH
+        with:
+          host: ${{ secrets.BACKEND_REPO_HOST }}  # Este es el host del backend donde el repositorio se encuentra
+          username: ${{ secrets.BACKEND_REPO_USER }}
+          key: ${{ secrets.BACKEND_REPO_SSH_KEY }}  # Usa las claves SSH generadas para acceso al backend
+          remote_path: 'https://github.com/Growth-Software/backend/views'  # Ruta en el servidor o directorio del repositorio backend
+          source: 'build/'  # Carpeta en frontend que deseas copiar
